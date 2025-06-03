@@ -19,6 +19,7 @@ export const apiRequest = async (endpoint: string, config: ApiConfig) => {
         'Accept': 'application/json',
         ...config.headers,
       },
+      credentials: 'include',
     });
 
     if (!response.ok) {
