@@ -53,12 +53,35 @@ const Guests = () => {
     fetchGuests();
   }, []); // Empty dependency array means this effect runs once on mount
 
+  const getImageUrl = (photoPath: string | null) => {
+    if (!photoPath) return null;
+    
+    // If the photo path is already a full URL, return it as is
+    if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+      return photoPath;
+    }
+    
+    // If the photo path starts with /media/, remove it as it's already included in BACKEND_URL
+    if (photoPath.startsWith('/media/')) {
+      return `${BACKEND_URL}${photoPath}`;
+    }
+    
+    // Otherwise, construct the full URL
+    return `${BACKEND_URL}/media/${photoPath}`;
+  };
+
   // Filter guests based on role for Chief/Special section - Updated to include new roles
   const chiefSpecialGuests = allGuests.filter(guest => 
     guest.role === 'প্রধান অতিথি' || 
     guest.role === 'বিশেষ অতিথি' ||
     guest.role === 'সভাপতিত্ব' ||
     guest.role === 'সার্বিক ত্বত্তবধান'
+  );
+
+  const otherGuests = allGuests.filter(guest => 
+    !guest.role ||
+    !guest.role.toLowerCase().includes('chief') && 
+    !guest.role.toLowerCase().includes('special')
   );
 
   return (
@@ -96,7 +119,7 @@ const Guests = () => {
                     <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                       {guest.profile_picture ? (
                         <img 
-                          src={`${BACKEND_URL}${guest.profile_picture}`}
+                          src={getImageUrl(guest.profile_picture)}
                           alt={guest.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -136,6 +159,43 @@ const Guests = () => {
               </div>
             </div>
           </section>
+
+          {/* Other Guests */}
+          {otherGuests.length > 0 && (
+            <section className="py-12 bg-gray-50">
+              <div className="container-custom">
+                <h2 className="heading-secondary text-center mb-10 bengali-text">অন্যান্য অতিথিবৃন্দ</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {otherGuests.map((guest) => (
+                    <div key={guest.id} className="islamic-card text-center">
+                      <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                        {guest.profile_picture ? (
+                          <img 
+                            src={getImageUrl(guest.profile_picture)}
+                            alt={guest.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = ''; // Clear the src to show the fallback
+                              target.onerror = null; // Prevent infinite loop
+                            }}
+                          />
+                        ) : (
+                          <span className="text-3xl text-gray-500">{guest.name.charAt(0)}</span>
+                        )}
+                      </div>
+                      <h3 className="bengali-text text-lg font-semibold text-islamic-green mb-1">
+                        {guest.name}
+                      </h3>
+                      <span className="inline-block bg-islamic-light text-islamic-dark px-3 py-1 rounded-full text-sm">
+                        {guest.role}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
         </>
       )}
 

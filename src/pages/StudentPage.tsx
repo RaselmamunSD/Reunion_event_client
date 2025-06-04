@@ -26,12 +26,10 @@ const StudentPage = () => {
   const batchYears = Array.from({ length: currentYear - 1995 + 1 }, (_, i) => String(1995 + i));
 
   useEffect(() => {
-    // Fetch all students when the component mounts or if 'Batch-All' is active initially
-    // Or fetch students for a selected batch if selectedBatch is not null
-    if (!showYears) { // Fetch all or default batch if needed on initial load
-       fetchStudents(null); // Fetch all students initially
+    if (!showYears) {
+      fetchStudents(null);
     } else if (selectedBatch) {
-       fetchStudents(selectedBatch);
+      fetchStudents(selectedBatch);
     }
   }, [showYears, selectedBatch]);
 
@@ -66,11 +64,30 @@ const StudentPage = () => {
 
   const handleYearClick = (year: string) => {
     setSelectedBatch(year);
+    setShowYears(true);
   };
 
   const handleBatchAllClick = () => {
     setShowYears(false);
     setSelectedBatch(null);
+    fetchStudents(null);
+  };
+
+  const getImageUrl = (photoPath: string | null) => {
+    if (!photoPath) return null;
+    
+    // If the photo path is already a full URL, return it as is
+    if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+      return photoPath;
+    }
+    
+    // If the photo path starts with /media/, remove it as it's already included in BACKEND_URL
+    if (photoPath.startsWith('/media/')) {
+      return `${BACKEND_URL}${photoPath}`;
+    }
+    
+    // Otherwise, construct the full URL
+    return `${BACKEND_URL}/media/${photoPath}`;
   };
 
   return (
@@ -79,32 +96,62 @@ const StudentPage = () => {
         <div className="container-custom text-center">
           <h1 className="bengali-text text-3xl font-bold mb-8">আমাদের সাকসেসফুল ছাত্রদের তথ্য</h1>
 
-          <button
-            onClick={handleBatchAllClick}
-            className={`font-bold py-2 px-6 rounded-md transition-colors duration-300 mb-8 ${!showYears ? 'bg-islamic-green text-white hover:bg-islamic-gold' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
-          >
-            Batch-All
-          </button>
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <button
+              onClick={handleBatchAllClick}
+              className={`font-bold py-2 px-6 rounded-md transition-colors duration-300 ${
+                !showYears ? 'bg-islamic-green text-white hover:bg-islamic-gold' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+              }`}
+            >
+              Batch-All
+            </button>
+            <button
+              onClick={() => setShowYears(true)}
+              className={`font-bold py-2 px-6 rounded-md transition-colors duration-300 ${
+                showYears ? 'bg-islamic-green text-white hover:bg-islamic-gold' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+              }`}
+            >
+              Batch-Select
+            </button>
+          </div>
 
           {showYears && (
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 max-w-2xl mx-auto">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 max-w-2xl mx-auto mb-8">
               {batchYears.map(year => (
-                <div 
-                  key={year} 
-                  className={`islamic-card py-2 px-4 text-islamic-dark font-semibold hover:bg-islamic-light cursor-pointer ${selectedBatch === year ? 'bg-islamic-gold text-white' : ''}`}
+                <button
+                  key={year}
                   onClick={() => handleYearClick(year)}
+                  className={`islamic-card py-2 px-4 text-islamic-dark font-semibold hover:bg-islamic-light cursor-pointer transition-colors duration-300 ${
+                    selectedBatch === year ? 'bg-islamic-gold text-white' : ''
+                  }`}
                 >
                   {year}
-                </div>
+                </button>
               ))}
             </div>
           )}
 
-          {/* Display Loading/Error messages */}
-          {loading && <p className="bengali-text text-center">ছাত্রদের তথ্য লোড হচ্ছে...</p>}
-          {error && <p className="bengali-text text-center text-red-500">{error}</p>}
+          {loading && (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-islamic-green mx-auto"></div>
+                <p className="bengali-text mt-4 text-gray-600">ছাত্রদের তথ্য লোড হচ্ছে...</p>
+              </div>
+            </div>
+          )}
 
-          {/* Display Students */}
+          {error && (
+            <div className="text-center p-4">
+              <p className="bengali-text text-red-500">{error}</p>
+              <button
+                onClick={() => fetchStudents(selectedBatch)}
+                className="mt-4 bg-islamic-green text-white px-4 py-2 rounded hover:bg-islamic-gold transition-colors"
+              >
+                আবার চেষ্টা করুন
+              </button>
+            </div>
+          )}
+
           {!loading && !error && (
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {students.map(student => (
@@ -112,7 +159,7 @@ const StudentPage = () => {
                   <div className="flex items-center mb-4">
                     {student.photo ? (
                       <img 
-                        src={`${BACKEND_URL}${student.photo}`}
+                        src={getImageUrl(student.photo)}
                         alt={student.name}
                         className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-islamic-green"
                         onError={(e) => {
@@ -140,8 +187,12 @@ const StudentPage = () => {
             </div>
           )}
 
-          {!loading && !error && showYears && students.length === 0 && (
-            <p className="bengali-text text-center text-gray-600 mt-8">এই বছরের জন্য কোন ছাত্রের তথ্য পাওয়া যায়নি।</p>
+          {!loading && !error && students.length === 0 && (
+            <p className="bengali-text text-center text-gray-600 mt-8">
+              {selectedBatch 
+                ? `এই বছরের জন্য কোন ছাত্রের তথ্য পাওয়া যায়নি।`
+                : 'কোন ছাত্রের তথ্য পাওয়া যায়নি।'}
+            </p>
           )}
         </div>
       </section>

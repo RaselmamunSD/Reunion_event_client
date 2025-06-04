@@ -54,6 +54,23 @@ const Committee = () => {
   // Removed Sample sub-committee data
   // const subCommittees = [ ... ];
 
+  const getImageUrl = (photoPath: string | null) => {
+    if (!photoPath) return null;
+    
+    // If the photo path is already a full URL, return it as is
+    if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+      return photoPath;
+    }
+    
+    // If the photo path starts with /media/, remove it as it's already included in BACKEND_URL
+    if (photoPath.startsWith('/media/')) {
+      return `${BACKEND_URL}${photoPath}`;
+    }
+    
+    // Otherwise, construct the full URL
+    return `${BACKEND_URL}/media/${photoPath}`;
+  };
+
   return (
     <MainLayout>
       {/* Page Header */}
@@ -78,7 +95,7 @@ const Committee = () => {
                 <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-islamic-light flex items-center justify-center border-2 border-islamic-green overflow-hidden">
                   {member.profile_picture ? (
                     <img 
-                      src={`${BACKEND_URL}${member.profile_picture}`} 
+                      src={getImageUrl(member.profile_picture)} 
                       alt={member.name} 
                       className="w-full h-full object-cover"
                       onError={(e) => {

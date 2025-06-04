@@ -132,6 +132,12 @@ const Header = () => {
               </NavigationMenuItem>
               
               <NavigationMenuItem>
+                <Link to="/profile-frames" className="text-islamic-dark hover:text-islamic-green transition-colors px-4 py-2">
+                  প্রোফাইল ফ্রেম
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
                 <Link to="/contact" className="text-islamic-dark hover:text-islamic-green transition-colors px-4 py-2">
                   যোগাযোগ
                 </Link>
@@ -157,6 +163,7 @@ const Header = () => {
             </li>
             <li><Link to="/committee" className="block py-3 px-4 border-b hover:bg-islamic-light" onClick={toggleMenu}>কমিটি</Link></li>
             <li><Link to="/students" className="block py-3 px-4 border-b hover:bg-islamic-light" onClick={toggleMenu}>ছাত্র</Link></li>
+            <li><Link to="/profile-frames" className="block py-3 px-4 border-b hover:bg-islamic-light" onClick={toggleMenu}>প্রোফাইল ফ্রেম</Link></li>
             <li><Link to="/contact" className="block py-3 px-4 border-b hover:bg-islamic-light" onClick={toggleMenu}>যোগাযোগ</Link></li>
             <li><Link to="/financial-report" className="block py-3 px-4 border-b hover:bg-islamic-light" onClick={toggleMenu}>আর্থিক প্রতিবেদন</Link></li>
           </ul>

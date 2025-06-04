@@ -13,6 +13,7 @@ import FinancialReport from "./pages/FinancialReport";
 import Notice from "./pages/Notice";
 import Guests from "./pages/Guests";
 import StudentPage from "./pages/StudentPage";
+import ProfileFramesPage from "./pages/ProfileFramesPage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/notice" element={<Notice />} />
           <Route path="/guests" element={<Guests />} />
           <Route path="/students" element={<StudentPage />} />
+          <Route path="/profile-frames" element={<ProfileFramesPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
