@@ -513,7 +513,7 @@ const ProfileBuilder = () => {
             </div>
 
             <Button 
-              onClick={handleSubmit}
+              onClick={generateFrame}
               disabled={isGenerating || !previewUrl}
               className="w-full bg-islamic-green hover:bg-islamic-green/90 text-white bengali-text"
             >
