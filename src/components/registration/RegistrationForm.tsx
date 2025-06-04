@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import FormFields from './FormFields';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
 
 const RegistrationForm = () => {
   // Create array of years from 1995 to current year
@@ -32,40 +32,77 @@ const RegistrationForm = () => {
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "নাম প্রয়োজন",
+        description: "অনুগ্রহ করে আপনার নাম প্রদান করুন",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.mobile.trim()) {
+      toast({
+        title: "মোবাইল নম্বর প্রয়োজন",
+        description: "অনুগ্রহ করে আপনার মোবাইল নম্বর প্রদান করুন",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast({
+        title: "ইমেইল প্রয়োজন",
+        description: "অনুগ্রহ করে আপনার ইমেইল প্রদান করুন",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (formData.paymentMethod !== 'cash' && !formData.transactionId.trim()) {
+      toast({
+        title: "লেনদেন আইডি প্রয়োজন",
+        description: "অনুগ্রহ করে লেনদেন আইডি প্রদান করুন",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      console.log('Submitting form data:', formData); // Debug log
-      
       const response = await fetch(`${API_URL}/registrations/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          name: formData.name,
-          batch: formData.batch,
-          profession: formData.profession,
-          mobile: formData.mobile,
-          email: formData.email,
+          name: formData.name.trim(),
+          batch: formData.batch || null,
+          profession: formData.profession.trim() || null,
+          mobile: formData.mobile.trim(),
+          email: formData.email.trim(),
           family_members: parseInt(formData.familyMembers),
-          special_requests: formData.specialRequests,
+          special_requests: formData.specialRequests.trim() || null,
           payment_method: formData.paymentMethod,
-          transaction_id: formData.transactionId
+          transaction_id: formData.transactionId.trim() || null
         }),
       });
 
-      console.log('Response status:', response.status); // Debug log
-      
       const data = await response.json();
-      console.log('Response data:', data); // Debug log
 
       if (!response.ok) {
-        throw new Error(data.detail || 'Registration failed');
+        throw new Error(data.detail || 'রেজিস্ট্রেশন ব্যর্থ হয়েছে');
       }
 
       toast({

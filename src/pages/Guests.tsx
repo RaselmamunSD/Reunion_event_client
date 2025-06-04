@@ -14,7 +14,7 @@ interface Guest {
   updated_at: string;
 }
 
-const API_URL = 'http://localhost:8000/api'; // Define API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
 
 const Guests = () => {
   const [allGuests, setAllGuests] = useState<Guest[]>([]);
@@ -24,10 +24,21 @@ const Guests = () => {
   useEffect(() => {
     const fetchGuests = async () => {
       try {
-        const response = await fetch(`${API_URL}/guests/`);
+        const response = await fetch(`${API_URL}/guests/`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
         if (!response.ok) {
-          throw new Error('Failed to fetch guests.');
+          const errorData = await response.json().catch(() => null);
+          console.error('Error response:', errorData);
+          throw new Error(errorData?.detail || 'Failed to fetch guests.');
         }
+
         const data: Guest[] = await response.json();
         setAllGuests(data);
       } catch (err) {

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -32,17 +32,19 @@ const Contact = () => {
       const response = await fetch(`${API_URL}/contacts/`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        credentials: 'include',
+        body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.detail || 'Failed to send message.');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || 'Failed to submit contact form');
       }
+
+      const data = await response.json();
 
       toast({
         title: "বার্তা সফলভাবে পাঠানো হয়েছে!",

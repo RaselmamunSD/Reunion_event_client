@@ -35,13 +35,22 @@ const StudentPage = () => {
   const fetchStudents = async (batchYear: string | null) => {
     setLoading(true);
     setError(null);
-    let url = '/api/students/';
+    const API_URL = import.meta.env.VITE_API_BASE_URL;
+    let url = `${API_URL}/api/students/`;
     if (batchYear) {
-      url = `/api/students/?batch=${batchYear}`;
+      url = `${API_URL}/api/students/?batch=${batchYear}`;
     }
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -49,8 +58,10 @@ const StudentPage = () => {
       setStudents(data);
     } catch (err) {
       console.error('Error fetching students:', err);
-      setError('ছাত্রদের তথ্য লোড করতে সমস্যা হয়েছে।');
-      setStudents([]); // Clear students on error
+      console.error('Request URL:', url);
+      console.error('Error details:', err.message);
+      setError('ছাত্রদের তথ্য লোড করতে সমস্যা হয়েছে।');
+      setStudents([]);
     } finally {
       setLoading(false);
     }

@@ -13,7 +13,7 @@ interface CommitteeMember {
   updated_at: string;
 }
 
-const API_URL = 'http://localhost:8000/api'; // Define API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
 
 const Committee = () => {
   const [committeeMembers, setCommitteeMembers] = useState<CommitteeMember[]>([]);
@@ -23,11 +23,21 @@ const Committee = () => {
   useEffect(() => {
     const fetchCommitteeMembers = async () => {
       try {
-        const response = await fetch(`${API_URL}/organizing-committee/`);
+        const response = await fetch(`${API_URL}/organizing-committee/`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
         if (!response.ok) {
-          throw new Error('Failed to fetch organizing committee members.');
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.detail || 'Failed to fetch committee members');
         }
-        const data: CommitteeMember[] = await response.json();
+
+        const data = await response.json();
         setCommitteeMembers(data);
       } catch (err) {
         console.error('Error fetching committee members:', err);

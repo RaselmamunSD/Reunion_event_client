@@ -10,7 +10,7 @@ import { RotateCcw } from 'lucide-react';
 
 moment.locale('bn-bd'); // Set locale globally or in useEffect if preferred
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
 
 interface FinancialCategory {
   id: number;
@@ -52,6 +52,24 @@ interface CategoryData {
   color: string;
 }
 
+interface ApiResponse<T> {
+  status: 'success' | 'error';
+  error?: string;
+  data?: T;
+}
+
+interface IncomeTotalResponse {
+  total_income: string;
+  status: 'success' | 'error';
+  error?: string;
+}
+
+interface ExpenseTotalResponse {
+  total_expenses: string;
+  status: 'success' | 'error';
+  error?: string;
+}
+
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#6ee7b7', '#fdba74', '#fca5a5', '#a78bfa', '#67e8f9'];
 
 const FinancialReport = () => {
@@ -66,7 +84,7 @@ const FinancialReport = () => {
 
   const fetchFinancialData = useCallback(async () => {
     setIsRefreshing(true);
-    setError(null); // Clear previous errors
+    setError(null);
     try {
       // Fetch total income and expense
       const [incomeTotalRes, expenseTotalRes, incomesRes, expensesRes] = await Promise.all([
@@ -76,89 +94,139 @@ const FinancialReport = () => {
         fetch(`${API_URL}/expenses/`),
       ]);
 
-      if (!incomeTotalRes.ok || !expenseTotalRes.ok || !incomesRes.ok || !expensesRes.ok) {
-        throw new Error('Failed to fetch financial data.');
+      // Check each response individually for better error handling
+      if (!incomeTotalRes.ok) {
+        const errorData = await incomeTotalRes.json();
+        throw new Error(errorData.error || `Failed to fetch income total: ${incomeTotalRes.statusText}`);
+      }
+      if (!expenseTotalRes.ok) {
+        const errorData = await expenseTotalRes.json();
+        throw new Error(errorData.error || `Failed to fetch expense total: ${expenseTotalRes.statusText}`);
+      }
+      if (!incomesRes.ok) {
+        const errorData = await incomesRes.json();
+        throw new Error(errorData.error || `Failed to fetch incomes: ${incomesRes.statusText}`);
+      }
+      if (!expensesRes.ok) {
+        const errorData = await expensesRes.json();
+        throw new Error(errorData.error || `Failed to fetch expenses: ${expensesRes.statusText}`);
       }
 
-      const incomeTotalData = await incomeTotalRes.json();
-      const expenseTotalData = await expenseTotalRes.json();
+      const incomeTotalData: IncomeTotalResponse = await incomeTotalRes.json();
+      const expenseTotalData: ExpenseTotalResponse = await expenseTotalRes.json();
       const incomes: Income[] = await incomesRes.json();
       const expenses: Expense[] = await expensesRes.json();
 
-      setTotalIncome(parseFloat(incomeTotalData.total_income || '0')); // Handle potential null/undefined
-      setTotalExpense(parseFloat(expenseTotalData.total_expenses || '0')); // Handle potential null/undefined
+      // Check for API errors
+      if (incomeTotalData.status === 'error') {
+        throw new Error(incomeTotalData.error || 'Failed to fetch income total');
+      }
+      if (expenseTotalData.status === 'error') {
+        throw new Error(expenseTotalData.error || 'Failed to fetch expense total');
+      }
 
-      // Process data for monthly chart
-      const monthlyMap = new Map<string, { income: number; expense: number }>();
+      // Process data with error handling
+      try {
+        setTotalIncome(parseFloat(incomeTotalData.total_income));
+        setTotalExpense(parseFloat(expenseTotalData.total_expenses));
+      } catch (err) {
+        console.error('Error parsing financial totals:', err);
+        throw new Error('Failed to process financial totals');
+      }
 
-      incomes.forEach(item => {
-        const monthYear = moment(item.date).format('YYYY-MM');
-        if (!monthlyMap.has(monthYear)) {
-          monthlyMap.set(monthYear, { income: 0, expense: 0 });
-        }
-        monthlyMap.get(monthYear)!.income += parseFloat(item.amount);
-      });
+      // Process monthly data with error handling
+      try {
+        const monthlyMap = new Map<string, { income: number; expense: number }>();
 
-      expenses.forEach(item => {
-        const monthYear = moment(item.date).format('YYYY-MM');
-        if (!monthlyMap.has(monthYear)) {
-          monthlyMap.set(monthYear, { income: 0, expense: 0 });
-        }
-        monthlyMap.get(monthYear)!.expense += parseFloat(item.amount);
-      });
+        incomes.forEach(item => {
+          try {
+            const monthYear = moment(item.date).format('YYYY-MM');
+            if (!monthlyMap.has(monthYear)) {
+              monthlyMap.set(monthYear, { income: 0, expense: 0 });
+            }
+            monthlyMap.get(monthYear)!.income += parseFloat(item.amount);
+          } catch (err) {
+            console.error('Error processing income item:', err);
+          }
+        });
 
-      const sortedMonthlyData = Array.from(monthlyMap.entries())
-        .sort(([a], [b]) => a.localeCompare(b)) // Sort by YYYY-MM
-        .map(([key, value]) => ({
-          month: moment(key).format('MMMM'), // Format month name for display
-          income: value.income,
-          expense: value.expense,
+        expenses.forEach(item => {
+          try {
+            const monthYear = moment(item.date).format('YYYY-MM');
+            if (!monthlyMap.has(monthYear)) {
+              monthlyMap.set(monthYear, { income: 0, expense: 0 });
+            }
+            monthlyMap.get(monthYear)!.expense += parseFloat(item.amount);
+          } catch (err) {
+            console.error('Error processing expense item:', err);
+          }
+        });
+
+        const sortedMonthlyData = Array.from(monthlyMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, value]) => ({
+            month: moment(key).format('MMMM'),
+            income: value.income,
+            expense: value.expense,
+          }));
+
+        setMonthlyData(sortedMonthlyData);
+      } catch (err) {
+        console.error('Error processing monthly data:', err);
+        throw new Error('Failed to process monthly financial data');
+      }
+
+      // Process category data
+      try {
+        const incomeCategoryMap = new Map<string, number>();
+        incomes.forEach(item => {
+          const categoryName = item.category?.name || 'অন্যান্য';
+          incomeCategoryMap.set(categoryName, (incomeCategoryMap.get(categoryName) || 0) + parseFloat(item.amount));
+        });
+
+        const expenseCategoryMap = new Map<string, number>();
+        expenses.forEach(item => {
+          const categoryName = item.category?.name || 'অন্যান্য';
+          expenseCategoryMap.set(categoryName, (expenseCategoryMap.get(categoryName) || 0) + parseFloat(item.amount));
+        });
+
+        const incomeBreakdown = Array.from(incomeCategoryMap.entries())
+          .map(([categoryName, total]) => ({ name: categoryName, value: total }))
+          .filter(item => item.value > 0);
+
+        const expenseBreakdown = Array.from(expenseCategoryMap.entries())
+          .map(([categoryName, total]) => ({ name: categoryName, value: total }))
+          .filter(item => item.value > 0);
+
+        const incomeBreakdownWithColors = incomeBreakdown.map((item, index) => ({
+          ...item,
+          color: COLORS[index % COLORS.length]
+        }));
+        const expenseBreakdownWithColors = expenseBreakdown.map((item, index) => ({
+          ...item,
+          color: COLORS[index % COLORS.length]
         }));
 
-      setMonthlyData(sortedMonthlyData);
-
-      // Process data for category breakdown
-      const incomeCategoryMap = new Map<string, number>();
-      incomes.forEach(item => {
-        const categoryName = item.category?.name || 'অন্যান্য';
-        incomeCategoryMap.set(categoryName, (incomeCategoryMap.get(categoryName) || 0) + parseFloat(item.amount));
-      });
-
-      const expenseCategoryMap = new Map<string, number>();
-      expenses.forEach(item => {
-        const categoryName = item.category?.name || 'অন্যান্য';
-        expenseCategoryMap.set(categoryName, (expenseCategoryMap.get(categoryName) || 0) + parseFloat(item.amount));
-      });
-
-      const incomeBreakdown = Array.from(incomeCategoryMap.entries()).map(([categoryName, total]) => {
-        return { name: categoryName, value: total };
-      }).filter(item => item.value > 0);
-
-       const expenseBreakdown = Array.from(expenseCategoryMap.entries()).map(([categoryName, total]) => {
-        return { name: categoryName, value: total };
-      }).filter(item => item.value > 0);
-
-      // Assign colors
-      const incomeBreakdownWithColors = incomeBreakdown.map((item, index) => ({...item, color: COLORS[index % COLORS.length]}));
-      const expenseBreakdownWithColors = expenseBreakdown.map((item, index) => ({...item, color: COLORS[index % COLORS.length]}));
-
-      setIncomeCategoriesData(incomeBreakdownWithColors);
-      setExpenseCategoriesData(expenseBreakdownWithColors);
-
+        setIncomeCategoriesData(incomeBreakdownWithColors);
+        setExpenseCategoriesData(expenseBreakdownWithColors);
+      } catch (err) {
+        console.error('Error processing category data:', err);
+        throw new Error('Failed to process category data');
+      }
 
     } catch (err) {
       console.error('Error fetching financial data:', err);
-      setError('Failed to load financial report. Please try again later.');
+      setError(err instanceof Error ? err.message : 'Failed to load financial report. Please try again later.');
       toast({
         title: "আর্থিক প্রতিবেদন লোড করতে ব্যর্থ হয়েছে",
-        description: "দুঃখিত, আর্থিক প্রতিবেদন লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        description: err instanceof Error ? err.message : "দুঃখিত, আর্থিক প্রতিবেদন লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [COLORS]); // Added COLORS to dependency array as it's used inside
+  }, []);
 
   useEffect(() => {
     fetchFinancialData();
@@ -173,7 +241,10 @@ const FinancialReport = () => {
         <section className="bg-islamic-green text-white py-10 mb-10">
           <div className="container-custom text-center">
             <h1 className="bengali-text text-3xl md:text-4xl font-bold">আর্থিক প্রতিবেদন</h1>
-            <p className="bengali-text text-white text-center mt-2">লোড হচ্ছে...</p>
+            <div className="mt-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+              <p className="bengali-text text-white text-center mt-2">লোড হচ্ছে...</p>
+            </div>
           </div>
         </section>
       </MainLayout>

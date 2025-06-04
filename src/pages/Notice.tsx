@@ -3,7 +3,7 @@ import MainLayout from '../components/layout/MainLayout';
 import { Calendar, Bell } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
 
 interface Notice {
   id: number;
@@ -22,10 +22,21 @@ const Notice = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const response = await fetch(`${API_URL}/notices/`);
+        const response = await fetch(`${API_URL}/notices/`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
         if (!response.ok) {
-          throw new Error('Failed to fetch notices.');
+          const errorData = await response.json().catch(() => null);
+          console.error('Error response:', errorData);
+          throw new Error(errorData?.detail || 'Failed to fetch notices.');
         }
+
         const data = await response.json();
         setNotices(data);
       } catch (err) {
