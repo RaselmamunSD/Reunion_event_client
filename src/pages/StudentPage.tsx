@@ -12,6 +12,9 @@ interface Student {
   address: string | null;
 }
 
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
+
 const StudentPage = () => {
   const [showYears, setShowYears] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
@@ -30,18 +33,13 @@ const StudentPage = () => {
     } else if (selectedBatch) {
        fetchStudents(selectedBatch);
     }
-  }, [showYears, selectedBatch]); // Re-run effect if showYears or selectedBatch changes
+  }, [showYears, selectedBatch]);
 
-  const fetchStudents = async (batchYear: string | null) => {
+  const fetchStudents = async (batch: string | null) => {
     setLoading(true);
     setError(null);
-    const API_URL = import.meta.env.VITE_API_BASE_URL;
-    let url = `${API_URL}/api/students/`;
-    if (batchYear) {
-      url = `${API_URL}/api/students/?batch=${batchYear}`;
-    }
-
     try {
+      const url = batch ? `${API_URL}/students/?batch=${batch}` : `${API_URL}/students/`;
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -50,33 +48,29 @@ const StudentPage = () => {
         },
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || 'Failed to fetch students');
       }
+
       const data = await response.json();
       setStudents(data);
     } catch (err) {
       console.error('Error fetching students:', err);
-      console.error('Request URL:', url);
-      console.error('Error details:', err.message);
-      setError('ছাত্রদের তথ্য লোড করতে সমস্যা হয়েছে।');
-      setStudents([]);
+      setError('Failed to load students. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBatchAllClick = () => {
-    setShowYears(!showYears);
-    setSelectedBatch(null); // Clear selected batch when toggling Batch-All
-    setStudents([]); // Clear students when toggling
-  };
-
   const handleYearClick = (year: string) => {
     setSelectedBatch(year);
-    setShowYears(true);
-    fetchStudents(year); // Fetch students for the selected year
+  };
+
+  const handleBatchAllClick = () => {
+    setShowYears(false);
+    setSelectedBatch(null);
   };
 
   return (
@@ -111,18 +105,27 @@ const StudentPage = () => {
           {error && <p className="bengali-text text-center text-red-500">{error}</p>}
 
           {/* Display Students */}
-          {!loading && !error && students.length > 0 && (
+          {!loading && !error && (
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {students.map(student => (
                 <div key={student.id} className="islamic-card text-left">
                   <div className="flex items-center mb-4">
-                     {student.photo && (
-                       <img 
-                         src={student.photo} 
-                         alt={student.name}
-                         className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-islamic-green"
-                       />
-                     )}
+                    {student.photo ? (
+                      <img 
+                        src={`${BACKEND_URL}${student.photo}`}
+                        alt={student.name}
+                        className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-islamic-green"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = ''; // Clear the src to show the fallback
+                          target.onerror = null; // Prevent infinite loop
+                        }}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 border-2 border-islamic-green">
+                        <span className="text-2xl text-gray-500">{student.name.charAt(0)}</span>
+                      </div>
+                    )}
                     <div>
                       <h3 className="bengali-text text-lg font-semibold text-islamic-green">{student.name}</h3>
                       {student.batch && <p className="bengali-text text-sm text-gray-600">ব্যাচ: {student.batch}</p>}
@@ -138,12 +141,8 @@ const StudentPage = () => {
           )}
 
           {!loading && !error && showYears && students.length === 0 && (
-              <p className="bengali-text text-center text-gray-600 mt-8">এই বছরের জন্য কোন ছাত্রের তথ্য পাওয়া যায়নি।</p>
+            <p className="bengali-text text-center text-gray-600 mt-8">এই বছরের জন্য কোন ছাত্রের তথ্য পাওয়া যায়নি।</p>
           )}
-           {!loading && !error && !showYears && students.length === 0 && (
-              <p className="bengali-text text-center text-gray-600 mt-8">ছাত্রদের তথ্য লোড হয়নি বা পাওয়া যায়নি।</p>
-          )}
-
         </div>
       </section>
     </MainLayout>

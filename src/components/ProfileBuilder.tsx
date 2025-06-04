@@ -335,30 +335,29 @@ const ProfileBuilder = () => {
     formData.append('mobile', profileData.phone);
     formData.append('address', profileData.address);
     formData.append('batch', profileData.batch);
-    formData.append('bloodType', profileData.bloodType);
+    formData.append('blood_type', profileData.bloodType);
 
-    setIsGenerating(true); // Reusing this state, maybe rename later?
+    setIsGenerating(true);
     console.log('Submitting profile frame data...');
 
+    const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
     const csrftoken = getCookie('csrftoken');
 
     try {
-      const response = await fetch('/api/profile-frame-submissions/', {
+      const response = await fetch(`${API_URL}/profile-frame-submissions/`, {
         method: 'POST',
         headers: {
-          'X-CSRFToken': csrftoken || ''
+          'X-CSRFToken': csrftoken || '',
+          'Accept': 'application/json',
         },
-        body: formData,
-        // No Content-Type header needed for FormData
+        credentials: 'include',
+        body: formData
       });
 
       if (!response.ok) {
-        // Improved error handling to show 403 specifically
-        if (response.status === 403) {
-            throw new Error('Operation forbidden. Possible CSRF issue or insufficient permissions.');
-        } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const errorData = await response.json().catch(() => null);
+        console.error('Error response:', errorData);
+        throw new Error(errorData?.detail || `HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -369,8 +368,18 @@ const ProfileBuilder = () => {
         description: "প্রোফাইল ফ্রেম ডেটা সফলভাবে জমা হয়েছে।"
       });
 
-      // Optionally, generate the frame after successful submission
-      await generateFrame(); // Keep or remove based on desired flow
+      // Reset form after successful submission
+      setProfileData({
+        name: '',
+        address: '',
+        phone: '',
+        batch: '',
+        bloodType: '',
+        photo: null
+      });
+      setPreviewUrl(null);
+      setShowFrame(false);
+      setIsDialogOpen(false);
 
     } catch (error) {
       console.error('Error submitting data:', error);
@@ -381,7 +390,6 @@ const ProfileBuilder = () => {
       });
     } finally {
       setIsGenerating(false);
-      // setIsDialogOpen(false); // Keep or remove based on desired flow
     }
   };
 

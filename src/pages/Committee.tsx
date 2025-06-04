@@ -14,6 +14,7 @@ interface CommitteeMember {
 }
 
 const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Committee = () => {
   const [committeeMembers, setCommitteeMembers] = useState<CommitteeMember[]>([]);
@@ -76,7 +77,16 @@ const Committee = () => {
               <div key={member.id} className="islamic-card text-center">
                 <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-islamic-light flex items-center justify-center border-2 border-islamic-green overflow-hidden">
                   {member.profile_picture ? (
-                    <img src={member.profile_picture} alt={member.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={`${BACKEND_URL}${member.profile_picture}`} 
+                      alt={member.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = ''; // Clear the src to show the fallback
+                        target.onerror = null; // Prevent infinite loop
+                      }}
+                    />
                   ) : (
                     <span className="text-3xl text-islamic-green">{member.name.charAt(0)}</span>
                   )}

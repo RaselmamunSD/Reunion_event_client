@@ -15,6 +15,7 @@ interface Guest {
 }
 
 const API_URL = import.meta.env.VITE_API_BASE_URL + '/api';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Guests = () => {
   const [allGuests, setAllGuests] = useState<Guest[]>([]);
@@ -95,9 +96,14 @@ const Guests = () => {
                     <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                       {guest.profile_picture ? (
                         <img 
-                          src={guest.profile_picture} 
+                          src={`${BACKEND_URL}${guest.profile_picture}`}
                           alt={guest.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = ''; // Clear the src to show the fallback
+                            target.onerror = null; // Prevent infinite loop
+                          }}
                         />
                       ) : (
                         <span className="text-5xl text-gray-500">{guest.name.charAt(0)}</span>
