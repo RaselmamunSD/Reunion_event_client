@@ -257,9 +257,35 @@ const ProfileBuilder = () => {
         currentY = drawText('৩০ বছর পূর্তি পূর্নমিলন অনুষ্ঠান', currentY);
 
         // Date
-        currentY += 60;
+        currentY += 10;
         ctx.font = 'bold 44px SolaimanLipi, Arial, sans-serif';
         drawText('১২ জুন ২০২৫', currentY);
+
+        // After drawing the event date, add this:
+        currentY += 40; // Add some space after the date
+        ctx.fillStyle = '#FFFFFF'; // White text for user info
+        ctx.font = 'bold 32px SolaimanLipi, Arial, sans-serif';
+
+        if (profileData.name) {
+          ctx.fillText(`নাম: ${profileData.name}`, canvas.width/2, currentY);
+          currentY += 38;
+        }
+        if (profileData.address) {
+          ctx.fillText(`ঠিকানা: ${profileData.address}`, canvas.width/2, currentY);
+          currentY += 38;
+        }
+        if (profileData.phone) {
+          ctx.fillText(`মোবাইল: ${profileData.phone}`, canvas.width/2, currentY);
+          currentY += 38;
+        }
+        if (profileData.batch) {
+          ctx.fillText(`ব্যাচ/বছর: ${profileData.batch}`, canvas.width/2, currentY);
+          currentY += 38;
+        }
+        if (profileData.bloodType) {
+          ctx.fillText(`রক্তের গ্রুপ: ${profileData.bloodType}`, canvas.width/2, currentY);
+          currentY += 38;
+        }
       } catch (error) {
         console.error('Error drawing text:', error);
         throw new Error('Failed to draw text');
