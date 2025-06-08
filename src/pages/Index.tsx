@@ -1,7 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Users } from 'lucide-react';
+
+const CountdownTimer = () => {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
+
+  useEffect(() => {
+    const eventDate = new Date('2025-06-12T10:00:00'); // Your event date and time
+
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const difference = eventDate.getTime() - now.getTime();
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      }
+    };
+
+    // Calculate immediately
+    calculateTimeLeft();
+
+    // Update every second
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    // Cleanup on unmount
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="mt-8 grid grid-cols-4 gap-4 max-w-2xl mx-auto">
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+        <div className="text-3xl md:text-4xl font-bold text-islamic-gold mb-1">{timeLeft.days}</div>
+        <div className="bengali-text text-sm">দিন</div>
+      </div>
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+        <div className="text-3xl md:text-4xl font-bold text-islamic-gold mb-1">{timeLeft.hours}</div>
+        <div className="bengali-text text-sm">ঘন্টা</div>
+      </div>
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+        <div className="text-3xl md:text-4xl font-bold text-islamic-gold mb-1">{timeLeft.minutes}</div>
+        <div className="bengali-text text-sm">মিনিট</div>
+      </div>
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+        <div className="text-3xl md:text-4xl font-bold text-islamic-gold mb-1">{timeLeft.seconds}</div>
+        <div className="bengali-text text-sm">সেকেন্ড</div>
+      </div>
+    </div>
+  );
+};
 
 const Index = () => {
   const fetchData = async () => {
@@ -42,9 +99,14 @@ const Index = () => {
             <p className="bengali-text text-lg md:text-xl mb-8">
               হাড়ীভাঙ্গা তালিমুল ইনসান হাফেজিয়া ক্বওমী মাদ্রাসা ও লিল্লাহ্ বোর্ডিং
             </p>
-            <Link to="/registration" className="inline-block bg-islamic-gold text-islamic-dark font-bold py-3 px-8 rounded-md hover:bg-opacity-90 transition-all duration-300 bengali-text">
-              রেজিস্ট্রেশন করুন
-            </Link>
+            
+            <CountdownTimer />
+            
+            <div className="mt-8">
+              <Link to="/registration" className="inline-block bg-islamic-gold text-islamic-dark font-bold py-3 px-8 rounded-md hover:bg-opacity-90 transition-all duration-300 bengali-text">
+                রেজিস্ট্রেশন করুন
+              </Link>
+            </div>
           </div>
         </div>
       </section>
