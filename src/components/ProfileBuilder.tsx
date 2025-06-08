@@ -523,31 +523,40 @@ const ProfileBuilder = () => {
 
           {/* Preview Section */}
           <div className="space-y-4">
-            {/* Canvas is always in DOM but hidden when showFrame is false */}
-            <canvas 
-              ref={canvasRef} 
-              className={`max-w-full h-auto border border-gray-300 rounded shadow-sm mx-auto block ${showFrame ? '' : 'hidden'}`}
-              style={{ 
-                maxHeight: '400px',
-                maxWidth: '400px'
-              }}
-            />
-            
             {showFrame ? (
-              <div className="text-center">
-                <div className="flex gap-3 mt-4 justify-center flex-wrap">
-                  <Button 
-                    onClick={downloadFrame}
-                    variant="outline"
-                    className="bengali-text flex-1 min-w-[120px] bg-white text-islamic-green border-islamic-green hover:bg-islamic-green hover:text-white"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    ডাউনলোড করুন
-                  </Button>
+              <div className="text-center space-y-4">
+                {/* Frame Preview */}
+                <div className="relative w-full max-w-[400px] mx-auto">
+                  <canvas 
+                    ref={canvasRef} 
+                    className="w-full h-auto border border-gray-300 rounded-lg shadow-sm"
+                    style={{ 
+                      maxHeight: 'min(400px, 80vw)',
+                      maxWidth: 'min(400px, 80vw)'
+                    }}
+                  />
                 </div>
-                <p className="text-sm text-gray-600 bengali-text mt-2">
-                  ফ্রেমটি ১০৮০x১০৮০ পিক্সেল রেজোলিউশনে তৈরি হয়েছে
-                </p>
+
+                {/* Download Section */}
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                    <Button 
+                      onClick={downloadFrame}
+                      variant="outline"
+                      className="bengali-text w-full sm:w-auto min-w-[200px] bg-white text-islamic-green border-islamic-green hover:bg-islamic-green hover:text-white transition-colors duration-200"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      ডাউনলোড করুন
+                    </Button>
+                  </div>
+                  
+                  {/* Resolution Info */}
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600 bengali-text">
+                      ফ্রেমটি ১০৮০x১০৮০ পিক্সেল রেজোলিউশনে তৈরি হয়েছে
+                    </p>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="flex items-center justify-center h-96 bg-gray-100 rounded border-2 border-dashed border-gray-300">

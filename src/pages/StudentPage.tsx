@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/layout/MainLayout';
+import { fetchWithNoCache } from '../lib/api';
 
 interface Student {
   id: number;
@@ -26,41 +27,28 @@ const StudentPage = () => {
   const batchYears = Array.from({ length: currentYear - 1995 + 1 }, (_, i) => String(1995 + i));
 
   useEffect(() => {
-    if (!showYears) {
-      fetchStudents(null);
-    } else if (selectedBatch) {
-      fetchStudents(selectedBatch);
-    }
-  }, [showYears, selectedBatch]);
-
-  const fetchStudents = async (batch: string | null) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const url = batch ? `${API_URL}/students/?batch=${batch}` : `${API_URL}/students/`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.detail || 'Failed to fetch students');
+    const fetchData = async () => {
+      try {
+        const url = selectedBatch ? `/students/?batch=${selectedBatch}` : '/students/';
+        const data = await fetchWithNoCache(url);
+        setStudents(data);
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError('Failed to load students. Please try again later.');
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const data = await response.json();
-      setStudents(data);
-    } catch (err) {
-      console.error('Error fetching students:', err);
-      setError('Failed to load students. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Initial fetch
+    fetchData();
+
+    // Set up polling every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+
+    // Cleanup on component unmount
+    return () => clearInterval(interval);
+  }, [selectedBatch]);
 
   const handleYearClick = (year: string) => {
     setSelectedBatch(year);
@@ -70,7 +58,7 @@ const StudentPage = () => {
   const handleBatchAllClick = () => {
     setShowYears(false);
     setSelectedBatch(null);
-    fetchStudents(null);
+    fetchData();
   };
 
   const getImageUrl = (photoPath: string | null) => {
@@ -144,7 +132,7 @@ const StudentPage = () => {
             <div className="text-center p-4">
               <p className="bengali-text text-red-500">{error}</p>
               <button
-                onClick={() => fetchStudents(selectedBatch)}
+                onClick={() => fetchData()}
                 className="mt-4 bg-islamic-green text-white px-4 py-2 rounded hover:bg-islamic-gold transition-colors"
               >
                 আবার চেষ্টা করুন

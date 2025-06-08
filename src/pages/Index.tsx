@@ -4,6 +4,31 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Users } from 'lucide-react';
 
 const Index = () => {
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`${API_URL}/your-endpoint/`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      
+      const data = await response.json();
+      // Update your state with the data
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
   return (
     <MainLayout>
       {/* Hero Section */}
