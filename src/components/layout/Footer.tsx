@@ -71,6 +71,33 @@ const Footer = () => {
         <div className="mt-8 pt-6 border-t border-gray-700 text-center">
           <p className="bengali-text text-sm">© {new Date().getFullYear()} হাড়ীভাঙ্গা তালিমুল ইনসান হাফেজিয়া ক্বওমী মাদ্রাসা। সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
+
+        {/* Website Maintenance Section */}
+        <div className="mt-8 pt-6 border-t border-gray-700">
+          <div className="flex flex-col items-center">
+            <h3 className="bengali-text text-xl font-bold mb-4">ওয়েবসাইট মেইনটেন্যান্স</h3>
+            <div className="flex items-center space-x-4">
+              <div className="w-20 h-20 bg-white p-1 rounded-full">
+                <img 
+                  src="/lovable-uploads/maintenance-photo.jpg" 
+                  alt="Website Maintenance" 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+              <div className="text-center">
+                <h4 className="bengali-text font-semibold text-lg mb-1">মো:ইয়াসিন আরাফাত</h4>
+                <p className="bengali-text text-islamic-gold mb-2"></p>
+                <p className="bengali-text mb-2">মোবাইল: 01920027144</p>
+                <a 
+                  href="mailto:yasin.arafat.1999@gmail.com"
+                  className="text-islamic-gold hover:text-white transition-colors"
+                >
+                  ইমেইল করুন
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );
