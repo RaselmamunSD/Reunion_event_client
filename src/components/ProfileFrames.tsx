@@ -37,6 +37,11 @@ const ProfileFrames = () => {
       const data = await response.json();
       setFrames(data);
     } catch (err) {
+      console.error('Detailed error in fetchFrames:', {
+        error: err instanceof Error ? err.message : String(err),
+        API_URL,
+        response: response
+      });
       setError(err instanceof Error ? err.message : 'Failed to load profile frames');
       toast({
         title: "ত্রুটি",
@@ -52,6 +57,19 @@ const ProfileFrames = () => {
     frame.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     frame.batch.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const loadImage = (src: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = (e) => {
+        console.error('Image loading error:', e);
+        reject(new Error('Failed to load image'));
+      };
+      img.src = src;
+    });
+  };
 
   if (loading) {
     return (

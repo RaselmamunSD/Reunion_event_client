@@ -63,6 +63,20 @@ const ProfileBuilder = () => {
     }
   }, [isDialogOpen]);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Initialize canvas with white background
+        canvas.width = 1080;
+        canvas.height = 1080;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  }, []); // Empty dependency array means this runs once on mount
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProfileData(prev => ({ ...prev, [name]: value }));
@@ -97,8 +111,14 @@ const ProfileBuilder = () => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Failed to load image'));
+      img.onload = () => {
+        console.log('Image loaded successfully:', img.width, 'x', img.height);
+        resolve(img);
+      };
+      img.onerror = (e) => {
+        console.error('Image loading error:', e);
+        reject(new Error('Failed to load image'));
+      };
       img.src = src;
     });
   };
@@ -117,9 +137,6 @@ const ProfileBuilder = () => {
     console.log('Starting frame generation...');
     
     try {
-      // Wait a small amount for canvas to be in DOM
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       const canvas = canvasRef.current;
       if (!canvas) {
         console.error('Canvas element not found');
@@ -138,9 +155,20 @@ const ProfileBuilder = () => {
       canvas.width = canvasSize;
       canvas.height = canvasSize;
 
+      // Clear canvas and set white background
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Add a subtle pattern background
+      ctx.fillStyle = '#F8F9FA';
+      for (let i = 0; i < canvas.width; i += 20) {
+        for (let j = 0; j < canvas.height; j += 20) {
+          if ((i + j) % 40 === 0) {
+            ctx.fillRect(i, j, 10, 10);
+          }
+        }
+      }
 
       console.log('Loading image from:', previewUrl);
       const img = await loadImage(previewUrl);
@@ -151,113 +179,123 @@ const ProfileBuilder = () => {
       const photoX = (canvas.width - photoSize) / 2;
       const photoY = 100;
       
-      // Draw user's photo with circular clipping
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(img, photoX, photoY, photoSize, photoSize);
-      ctx.restore();
-      
-      // Draw photo border
-      ctx.strokeStyle = '#2F5233';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-      ctx.stroke();
+      try {
+        // Draw user's photo with circular clipping
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(img, photoX, photoY, photoSize, photoSize);
+        ctx.restore();
+        
+        // Draw photo border
+        ctx.strokeStyle = '#2F5233';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+        ctx.stroke();
+      } catch (error) {
+        console.error('Error drawing photo:', error);
+        throw new Error('Failed to draw photo');
+      }
 
       // Text area setup
       const textStartY = photoY + photoSize + 60;
       const textAreaHeight = canvas.height - textStartY - 80;
       const textAreaMargin = 40;
       
-      // Draw text background with rounded rectangle
-      ctx.fillStyle = '#2F5233';
-      ctx.beginPath();
-      ctx.roundRect(textAreaMargin, textStartY, canvas.width - (textAreaMargin * 2), textAreaHeight, 20);
-      ctx.fill();
-      
-      // Add golden border to text area
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.roundRect(textAreaMargin, textStartY, canvas.width - (textAreaMargin * 2), textAreaHeight, 20);
-      ctx.stroke();
-
-      // Set text properties
-      ctx.textAlign = 'center';
-      let currentY = textStartY + 80;
-      
-      // Main title
-      ctx.font = 'bold 38px Arial';
-      ctx.fillStyle = '#FFD700';
-      ctx.fillText('হাড়িভাঙ্গা তালিমুল ইনসান', canvas.width/2, currentY);
-      
-      currentY += 45;
-      ctx.fillText('হাফেজিয়া ক্বওমী মাদ্রাসার', canvas.width/2, currentY);
-      
-      currentY += 45;
-      ctx.fillText('৩০ বছর পূর্তি পূর্নমিলন অনুষ্ঠান', canvas.width/2, currentY);
-
-      // Date
-      currentY += 60;
-      ctx.font = 'bold 44px Arial';
-      ctx.fillStyle = '#FFD700';
-      ctx.fillText('১২ জুন ২০২৫', canvas.width/2, currentY);
-
-      // User info section
-      if (profileData.name || profileData.phone || profileData.address || profileData.batch || profileData.bloodType) {
-        currentY += 40;
-        ctx.font = '30px Arial';
-        ctx.fillStyle = '#FFFFFF';
-        const userInfoLineHeight = 38;
+      try {
+        // Draw text background with rounded rectangle
+        ctx.fillStyle = '#2F5233';
+        ctx.beginPath();
+        // Fallback for browsers that don't support roundRect
+        if (ctx.roundRect) {
+          ctx.roundRect(textAreaMargin, textStartY, canvas.width - (textAreaMargin * 2), textAreaHeight, 20);
+        } else {
+          // Fallback to regular rectangle
+          ctx.rect(textAreaMargin, textStartY, canvas.width - (textAreaMargin * 2), textAreaHeight);
+        }
+        ctx.fill();
         
-        if (profileData.name) {
-          ctx.fillText(`নাম: ${profileData.name}`, canvas.width/2, currentY);
-          currentY += userInfoLineHeight;
+        // Add golden border to text area
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(textAreaMargin, textStartY, canvas.width - (textAreaMargin * 2), textAreaHeight, 20);
+        } else {
+          ctx.rect(textAreaMargin, textStartY, canvas.width - (textAreaMargin * 2), textAreaHeight);
         }
-        if (profileData.phone) {
-          ctx.fillText(`ফোন: ${profileData.phone}`, canvas.width/2, currentY);
-          currentY += userInfoLineHeight;
-        }
-        if (profileData.address) {
-          ctx.fillText(`ঠিকানা: ${profileData.address}`, canvas.width/2, currentY);
-          currentY += userInfoLineHeight;
-        }
-        if (profileData.batch) {
-          ctx.fillText(`ব্যাচ/বছর: ${profileData.batch}`, canvas.width/2, currentY);
-          currentY += userInfoLineHeight;
-        }
-        if (profileData.bloodType) {
-          ctx.fillText(`রক্তের গ্রুপ: ${profileData.bloodType}`, canvas.width/2, currentY);
-        }
+        ctx.stroke();
+      } catch (error) {
+        console.error('Error drawing text background:', error);
+        throw new Error('Failed to draw text background');
       }
 
-      // Outer decorative border
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 12;
-      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-      
-      // Inner border
-      ctx.strokeStyle = '#2F5233';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(35, 35, canvas.width - 70, canvas.height - 70);
+      try {
+        // Set text properties
+        ctx.textAlign = 'center';
+        let currentY = textStartY + 80;
+        
+        // Main title - Use SolaimanLipi font with fallback
+        ctx.font = 'bold 38px SolaimanLipi, Arial, sans-serif';
+        ctx.fillStyle = '#FFD700';
+        
+        // Draw text with error handling
+        const drawText = (text: string, y: number) => {
+          try {
+            ctx.fillText(text, canvas.width/2, y);
+            return y + 45;
+          } catch (error) {
+            console.error(`Error drawing text: ${text}`, error);
+            return y;
+          }
+        };
 
-      // Corner decorations
-      const cornerSize = 50;
-      ctx.fillStyle = '#FFD700';
-      
-      // Top corners
-      ctx.fillRect(20, 20, cornerSize, 12);
-      ctx.fillRect(20, 20, 12, cornerSize);
-      ctx.fillRect(canvas.width - 20 - cornerSize, 20, cornerSize, 12);
-      ctx.fillRect(canvas.width - 32, 20, 12, cornerSize);
-      
-      // Bottom corners
-      ctx.fillRect(20, canvas.height - 32, cornerSize, 12);
-      ctx.fillRect(20, canvas.height - 20 - cornerSize, 12, cornerSize);
-      ctx.fillRect(canvas.width - 20 - cornerSize, canvas.height - 32, cornerSize, 12);
-      ctx.fillRect(canvas.width - 32, canvas.height - 20 - cornerSize, 12, cornerSize);
+        currentY = drawText('হাড়িভাঙ্গা তালিমুল ইনসান', currentY);
+        currentY = drawText('হাফেজিয়া ক্বওমী মাদ্রাসার', currentY);
+        currentY = drawText('৩০ বছর পূর্তি পূর্নমিলন অনুষ্ঠান', currentY);
+
+        // Date
+        currentY += 60;
+        ctx.font = 'bold 44px SolaimanLipi, Arial, sans-serif';
+        drawText('১২ জুন ২০২৫', currentY);
+      } catch (error) {
+        console.error('Error drawing text:', error);
+        throw new Error('Failed to draw text');
+      }
+
+      // Draw borders and decorations
+      try {
+        // Outer decorative border
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 12;
+        ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+        
+        // Inner border
+        ctx.strokeStyle = '#2F5233';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(35, 35, canvas.width - 70, canvas.height - 70);
+
+        // Corner decorations
+        const cornerSize = 50;
+        ctx.fillStyle = '#FFD700';
+        
+        // Top corners
+        ctx.fillRect(20, 20, cornerSize, 12);
+        ctx.fillRect(20, 20, 12, cornerSize);
+        ctx.fillRect(canvas.width - 20 - cornerSize, 20, cornerSize, 12);
+        ctx.fillRect(canvas.width - 32, 20, 12, cornerSize);
+        
+        // Bottom corners
+        ctx.fillRect(20, canvas.height - 32, cornerSize, 12);
+        ctx.fillRect(20, canvas.height - 20 - cornerSize, 12, cornerSize);
+        ctx.fillRect(canvas.width - 20 - cornerSize, canvas.height - 32, cornerSize, 12);
+        ctx.fillRect(canvas.width - 32, canvas.height - 20 - cornerSize, 12, cornerSize);
+      } catch (error) {
+        console.error('Error drawing decorations:', error);
+        throw new Error('Failed to draw decorations');
+      }
 
       setShowFrame(true);
       setIsGenerating(false);
@@ -268,11 +306,16 @@ const ProfileBuilder = () => {
         description: "ফ্রেম তৈরি হয়েছে"
       });
     } catch (error) {
-      console.error('Error in generateFrame:', error);
+      console.error('Detailed error in generateFrame:', {
+        error,
+        previewUrl,
+        canvas: canvasRef.current,
+        context: canvasRef.current?.getContext('2d')
+      });
       setIsGenerating(false);
       toast({
         title: "ত্রুটি",
-        description: "ফ্রেম তৈরি করতে সমস্যা হয়েছে",
+        description: `ফ্রেম তৈরি করতে সমস্যা হয়েছে: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive"
       });
     }
@@ -523,21 +566,31 @@ const ProfileBuilder = () => {
 
           {/* Preview Section */}
           <div className="space-y-4">
-            {showFrame ? (
-              <div className="text-center space-y-4">
-                {/* Frame Preview */}
-                <div className="relative w-full max-w-[400px] mx-auto">
-                  <canvas 
-                    ref={canvasRef} 
-                    className="w-full h-auto border border-gray-300 rounded-lg shadow-sm"
-                    style={{ 
-                      maxHeight: 'min(400px, 80vw)',
-                      maxWidth: 'min(400px, 80vw)'
-                    }}
-                  />
-                </div>
+            <div className="text-center space-y-4">
+              {/* Frame Preview */}
+              <div className="relative w-full max-w-[400px] mx-auto">
+                <canvas 
+                  ref={canvasRef} 
+                  className="w-full h-auto border border-gray-300 rounded-lg shadow-sm"
+                  style={{ 
+                    maxHeight: 'min(400px, 80vw)',
+                    maxWidth: 'min(400px, 80vw)',
+                    display: showFrame ? 'block' : 'none'
+                  }}
+                />
+                {!showFrame && (
+                  <div className="flex items-center justify-center h-96 bg-gray-100 rounded border-2 border-dashed border-gray-300">
+                    <div className="text-center p-6">
+                      <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                      <p className="bengali-text text-gray-500 text-lg font-medium">প্রোফাইল ফ্রেম এখানে দেখানো হবে</p>
+                      <p className="bengali-text text-sm text-gray-400 mt-2">ছবি আপলোড করে "ফ্রেম তৈরি করুন" বাটনে ক্লিক করুন</p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-                {/* Download Section */}
+              {/* Download Section */}
+              {showFrame && (
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                     <Button 
@@ -557,16 +610,8 @@ const ProfileBuilder = () => {
                     </p>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-96 bg-gray-100 rounded border-2 border-dashed border-gray-300">
-                <div className="text-center p-6">
-                  <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <p className="bengali-text text-gray-500 text-lg font-medium">প্রোফাইল ফ্রেম এখানে দেখানো হবে</p>
-                  <p className="bengali-text text-sm text-gray-400 mt-2">ছবি আপলোড করে "ফ্রেম তৈরি করুন" বাটনে ক্লিক করুন</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>
