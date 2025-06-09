@@ -318,6 +318,23 @@ const Index = () => {
                 <p className="bengali-text text-sm text-gray-500">হাড়ীভাঙ্গা, সদর, লালমনিরহাট</p>
               </div>
             </div>
+
+            {/* মেসার্স আরিফ ষ্টোর */}
+            <div className="islamic-card hover:shadow-lg transition-all duration-300">
+              <div className="relative overflow-hidden rounded-t-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-islamic-gold/20 to-islamic-green/20"></div>
+                <div className="aspect-square flex items-center justify-center p-4">
+                  <div className="w-32 h-32 border-4 border-islamic-gold rounded-full flex items-center justify-center overflow-hidden">
+                    <img src="/lovable-uploads/arif-store.jpg" alt="মেসার্স আরিফ ষ্টোর proprietor" className="object-cover w-full h-full" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 text-center">
+                <h3 className="bengali-text text-xl font-semibold mb-2 text-islamic-green">মেসার্স আরিফ ষ্টোর</h3>
+                <p className="bengali-text text-gray-600 mb-2">প্রোঃ মোঃ আনিছুর রহমান</p>
+                <p className="bengali-text text-sm text-gray-500">১নং ফুলগাছ, রেলগেট বাজার, লালমনিরহাট</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
