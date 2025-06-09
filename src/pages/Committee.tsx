@@ -21,34 +21,43 @@ const Committee = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchCommitteeMembers = async () => {
-      try {
-        const response = await fetch(`${API_URL}/organizing-committee/`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
+  const fetchCommitteeMembers = async () => {
+    try {
+      const response = await fetch(`${API_URL}/organizing-committee/`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.detail || 'Failed to fetch committee members');
-        }
-
-        const data = await response.json();
-        setCommitteeMembers(data);
-      } catch (err) {
-        console.error('Error fetching committee members:', err);
-        setError('Failed to load organizing committee members. Please try again later.');
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || 'Failed to fetch committee members');
       }
-    };
 
+      const data = await response.json();
+      setCommitteeMembers(data);
+    } catch (err) {
+      console.error('Error fetching committee members:', err);
+      setError('Failed to load organizing committee members. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCommitteeMembers();
+    
+    // Set up polling every 30 seconds
+    const intervalId = setInterval(fetchCommitteeMembers, 30000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, []); // Empty dependency array means this effect runs once on mount
 
   // Removed Sample sub-committee data

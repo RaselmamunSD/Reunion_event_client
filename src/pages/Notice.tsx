@@ -19,40 +19,49 @@ const Notice = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchNotices = async () => {
-      try {
-        const response = await fetch(`${API_URL}/notices/`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
+  const fetchNotices = async () => {
+    try {
+      const response = await fetch(`${API_URL}/notices/`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          console.error('Error response:', errorData);
-          throw new Error(errorData?.detail || 'Failed to fetch notices.');
-        }
-
-        const data = await response.json();
-        setNotices(data);
-      } catch (err) {
-        console.error('Error fetching notices:', err);
-        setError('Failed to load notices. Please try again later.');
-        toast({
-          title: "নোটিশ লোড করতে ব্যর্থ হয়েছে",
-          description: "দুঃখিত, নোটিশ লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Error response:', errorData);
+        throw new Error(errorData?.detail || 'Failed to fetch notices.');
       }
-    };
 
+      const data = await response.json();
+      setNotices(data);
+    } catch (err) {
+      console.error('Error fetching notices:', err);
+      setError('Failed to load notices. Please try again later.');
+      toast({
+        title: "নোটিশ লোড করতে ব্যর্থ হয়েছে",
+        description: "দুঃখিত, নোটিশ লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchNotices();
+    
+    // Set up polling every 30 seconds
+    const intervalId = setInterval(fetchNotices, 30000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, []); // Empty dependency array means this effect runs once on mount
 
   if (loading) {

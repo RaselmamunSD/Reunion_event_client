@@ -22,35 +22,44 @@ const Guests = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchGuests = async () => {
-      try {
-        const response = await fetch(`${API_URL}/guests/`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
+  const fetchGuests = async () => {
+    try {
+      const response = await fetch(`${API_URL}/guests/`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          console.error('Error response:', errorData);
-          throw new Error(errorData?.detail || 'Failed to fetch guests.');
-        }
-
-        const data: Guest[] = await response.json();
-        setAllGuests(data);
-      } catch (err) {
-        console.error('Error fetching guests:', err);
-        setError('Failed to load guests. Please try again later.');
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Error response:', errorData);
+        throw new Error(errorData?.detail || 'Failed to fetch guests.');
       }
-    };
 
+      const data: Guest[] = await response.json();
+      setAllGuests(data);
+    } catch (err) {
+      console.error('Error fetching guests:', err);
+      setError('Failed to load guests. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchGuests();
+    
+    // Set up polling every 30 seconds
+    const intervalId = setInterval(fetchGuests, 30000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, []); // Empty dependency array means this effect runs once on mount
 
   const getImageUrl = (photoPath: string | null) => {

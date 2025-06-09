@@ -174,6 +174,34 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Principal's Message & Biography Section */}
+      <section className="py-12 bg-blue-50">
+        <div className="container-custom flex flex-col md:flex-row items-center gap-10">
+          {/* Text Content */}
+          <div className="md:w-2/3 w-full">
+            <h2 className="bengali-text text-2xl md:text-3xl font-bold mb-4 text-islamic-green">মুহতামিম এর বাণী</h2>
+            <div className="bg-blue-100 border-l-4 border-blue-400 p-4 mb-4">
+              <span className="bengali-text font-semibold">হাড়ীভাঙ্গা তালিমুল ইনসান হাফেজিয়া ক্বওমী মাদ্রাসা
+                      ও লিল্লাহ্ বোর্ডিং</span>
+            </div>
+            <div className="bengali-text text-gray-800 space-y-3">
+              <p>আসছে আগামী ১২ জুন ২০২৫ রোজ বৃহস্পতি-বার হাজীভাঙ্গা তালিমুল ইনসান হাফেজিয়া ক্বওমী মাদ্রাসা এর সাবেক ছাত্রদের উদ্যোগে ঈদ পূনর্মিলনী। যার মাধ্যমে শর্ত 
+              ব্যস্ততার মাঝেও অনেকগুলো আত্মাত্রিক আত্মস পরিনত হওমার প্রয়াসা করে আসবে সেই দিন ভেদা ভেদ ভুলে একদিত হয়ে একদিন দেখা হবে, কথা হয়ে সম্পর্ক হবে গারো, সঙ্গি এই রকম অনুষ্ঠান প্রতিবছর করতে পারো সকল ছাত্র অনুষ্ঠানে উপস্থিত হবে চিধই কাম্য, তবেই অনুষ্ঠান হবে পরিপূর্ণ। পরিগেতে উচ্চ অনুষ্ঠানের মঙ্গল কামনায় 
+              সকলের অর্বাত্মক সরবার্থক সহযোগিতা কামনায় আল্লাহ হাফেজ।</p> 
+            </div>
+          </div>
+          {/* Image */}
+          <div className="md:w-1/3 w-full flex justify-center">
+            <div className="rounded-lg overflow-hidden shadow-lg border-4 border-blue-200 bg-white p-2">
+              <img src="/lovable-uploads/principal.jpg" alt="Principal" className="w-64 h-80 object-cover" />
+              <div className="mt-4 text-center">
+                <span className="bengali-text font-bold text-islamic-green">মুহতামিম<br/>মোহাম্মদ নুর আলম সিদ্দিক</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Key Events Overview */}
       <section className="py-12">
         <div className="container-custom">
