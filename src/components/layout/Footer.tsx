@@ -79,7 +79,7 @@ const Footer = () => {
             <div className="flex items-center space-x-4">
               <div className="w-20 h-20 bg-white p-1 rounded-full">
                 <img 
-                  src="/lovable-uploads/maintenance-photo.jpg" 
+                  src="/lovable-uploads/maintenance-photo.jpeg" 
                   alt="Website Maintenance" 
                   className="w-full h-full object-cover rounded-full"
                 />
